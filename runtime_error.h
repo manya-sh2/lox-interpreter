@@ -9,7 +9,5 @@ using namespace std;
 class RuntimeError : public runtime_error {
 public:
     Token token;
-
-    RuntimeError(Token token, const string& message)
-        : runtime_error(message), token(token) {}
+    RuntimeError(Token token, const string& message) : runtime_error(message), token(token) {}
 };

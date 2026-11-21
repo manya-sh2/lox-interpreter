@@ -11,6 +11,7 @@ using namespace std;
 
 static bool hadError        = false;
 static bool hadRuntimeError = false;
+static AstStorage ast;
 static Interpreter interpreter;
 
 void report(int line, const string& where, const string& message) {
@@ -23,8 +24,7 @@ void error(int line, const string& message) {
 }
 
 void runtimeError(const RuntimeError& error) {
-    cerr << "[line " << error.token.line << "] Runtime Error: "
-         << error.what() << endl;
+    cerr << "[line " << error.token.line << "] Runtime Error: " << error.what() << endl;
     hadRuntimeError = true;
 }
 
@@ -35,8 +35,8 @@ void run(const string& source) {
     if (hadError) return;
 
     // Step 2: Parse
-    Parser parser(tokens);
-    vector<shared_ptr<Stmt>> statements = parser.parse();
+    Parser parser(tokens, ast);
+    vector<Stmt*> statements = parser.parse();
     if (hadError) return;          // ← removed statements.empty() check
                                    //   empty input is valid, not an error
 

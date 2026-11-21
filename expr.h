@@ -2,7 +2,6 @@
 
 #include "token.h"
 #include <string>
-#include <memory>
 #include <vector>
 
 using namespace std;
@@ -10,12 +9,8 @@ using namespace std;
 class Interpreter;
 class LoxCallable;
 
-// ============================================================
 // VALUE
-// ============================================================
-
 struct Value {
-
     enum Type {
         NIL,
         BOOLEAN,
@@ -23,14 +18,11 @@ struct Value {
         STRING,
         CALLABLE
     };
-
     Type type;
-
     bool boolean;
     double number;
     string str;
-
-    shared_ptr<LoxCallable> callable;
+    LoxCallable* callable;
 
     // nil
     Value()
@@ -65,13 +57,12 @@ struct Value {
           callable(nullptr) {}
 
     // callable
-    Value(shared_ptr<LoxCallable> c)
+    Value(LoxCallable* c)
         : type(CALLABLE),
           boolean(false),
           number(0.0),
           str(""),
           callable(c) {}
-
     bool isNil() const {
         return type == NIL;
     }
@@ -93,31 +84,17 @@ struct Value {
     }
 };
 
-
-// ============================================================
 // CALLABLE INTERFACE
-// ============================================================
-
 class LoxCallable {
 public:
-
     virtual ~LoxCallable() {}
 
     virtual int arity() = 0;
-
-    virtual Value call(
-        Interpreter* interpreter,
-        const vector<Value>& arguments
-    ) = 0;
-
+    virtual Value call(Interpreter* interpreter, const vector<Value>& arguments) = 0;
     virtual string toString() = 0;
 };
 
-
-// ============================================================
 // FORWARD DECLARATIONS
-// ============================================================
-
 class Binary;
 class Unary;
 class Grouping;
@@ -127,96 +104,55 @@ class Assign;
 class Logical;
 class Call;
 
-
-// ============================================================
 // STRING VISITOR
-// ============================================================
-
 class StringVisitor {
 public:
-
     virtual ~StringVisitor() {}
 
     virtual string visitBinaryExpr(Binary* expr) = 0;
-
     virtual string visitUnaryExpr(Unary* expr) = 0;
-
     virtual string visitGroupingExpr(Grouping* expr) = 0;
-
     virtual string visitLiteralExpr(Literal* expr) = 0;
-
     virtual string visitVariableExpr(Variable* expr) = 0;
-
     virtual string visitAssignExpr(Assign* expr) = 0;
-
     virtual string visitLogicalExpr(Logical* expr) = 0;
-
     virtual string visitCallExpr(Call* expr) = 0;
 };
 
-
-// ============================================================
 // VALUE VISITOR
-// ============================================================
-
 class ValueVisitor {
 public:
-
     virtual ~ValueVisitor() {}
 
     virtual Value visitBinaryExpr(Binary* expr) = 0;
-
     virtual Value visitUnaryExpr(Unary* expr) = 0;
-
     virtual Value visitGroupingExpr(Grouping* expr) = 0;
-
     virtual Value visitLiteralExpr(Literal* expr) = 0;
-
     virtual Value visitVariableExpr(Variable* expr) = 0;
-
     virtual Value visitAssignExpr(Assign* expr) = 0;
-
     virtual Value visitLogicalExpr(Logical* expr) = 0;
-
     virtual Value visitCallExpr(Call* expr) = 0;
 };
 
-
-// ============================================================
 // BASE EXPRESSION
-// ============================================================
-
 class Expr {
 public:
-
     virtual ~Expr() {}
 
     virtual string accept(StringVisitor* visitor) = 0;
-
     virtual Value accept(ValueVisitor* visitor) = 0;
 };
 
-
-// ============================================================
 // BINARY
-// ============================================================
-
 class Binary : public Expr {
 public:
-
-    shared_ptr<Expr> left;
+    Expr* left;
     Token op;
-    shared_ptr<Expr> right;
-
-    Binary(
-        shared_ptr<Expr> left,
-        Token op,
-        shared_ptr<Expr> right
-    )
+    Expr* right;
+    Binary(Expr* left, Token op, Expr* right)
         : left(left),
           op(op),
           right(right) {}
-
     string accept(StringVisitor* visitor) override {
         return visitor->visitBinaryExpr(this);
     }
@@ -226,24 +162,14 @@ public:
     }
 };
 
-
-// ============================================================
 // UNARY
-// ============================================================
-
 class Unary : public Expr {
 public:
-
     Token op;
-    shared_ptr<Expr> right;
-
-    Unary(
-        Token op,
-        shared_ptr<Expr> right
-    )
+    Expr* right;
+    Unary(Token op, Expr* right)
         : op(op),
           right(right) {}
-
     string accept(StringVisitor* visitor) override {
         return visitor->visitUnaryExpr(this);
     }
@@ -253,19 +179,11 @@ public:
     }
 };
 
-
-// ============================================================
 // GROUPING
-// ============================================================
-
 class Grouping : public Expr {
 public:
-
-    shared_ptr<Expr> expression;
-
-    Grouping(shared_ptr<Expr> expression)
-        : expression(expression) {}
-
+    Expr* expression;
+    Grouping(Expr* expression) : expression(expression) {}
     string accept(StringVisitor* visitor) override {
         return visitor->visitGroupingExpr(this);
     }
@@ -275,19 +193,11 @@ public:
     }
 };
 
-
-// ============================================================
 // LITERAL
-// ============================================================
-
 class Literal : public Expr {
 public:
-
     Value value;
-
-    Literal(Value value)
-        : value(value) {}
-
+    Literal(Value value) : value(value) {}
     string accept(StringVisitor* visitor) override {
         return visitor->visitLiteralExpr(this);
     }
@@ -297,19 +207,11 @@ public:
     }
 };
 
-
-// ============================================================
 // VARIABLE
-// ============================================================
-
 class Variable : public Expr {
 public:
-
     Token name;
-
-    Variable(Token name)
-        : name(name) {}
-
+    Variable(Token name) : name(name) {}
     string accept(StringVisitor* visitor) override {
         return visitor->visitVariableExpr(this);
     }
@@ -319,24 +221,14 @@ public:
     }
 };
 
-
-// ============================================================
 // ASSIGN
-// ============================================================
-
 class Assign : public Expr {
 public:
-
     Token name;
-    shared_ptr<Expr> value;
-
-    Assign(
-        Token name,
-        shared_ptr<Expr> value
-    )
+    Expr* value;
+    Assign(Token name, Expr* value)
         : name(name),
           value(value) {}
-
     string accept(StringVisitor* visitor) override {
         return visitor->visitAssignExpr(this);
     }
@@ -346,27 +238,16 @@ public:
     }
 };
 
-
-// ============================================================
 // LOGICAL
-// ============================================================
-
 class Logical : public Expr {
 public:
-
-    shared_ptr<Expr> left;
+    Expr* left;
     Token op;
-    shared_ptr<Expr> right;
-
-    Logical(
-        shared_ptr<Expr> left,
-        Token op,
-        shared_ptr<Expr> right
-    )
+    Expr* right;
+    Logical(Expr* left, Token op, Expr* right)
         : left(left),
           op(op),
           right(right) {}
-
     string accept(StringVisitor* visitor) override {
         return visitor->visitLogicalExpr(this);
     }
@@ -376,29 +257,16 @@ public:
     }
 };
 
-
-// ============================================================
 // CALL
-// ============================================================
-
 class Call : public Expr {
 public:
-
-    shared_ptr<Expr> callee;
-
+    Expr* callee;
     Token paren;
-
-    vector<shared_ptr<Expr>> arguments;
-
-    Call(
-        shared_ptr<Expr> callee,
-        Token paren,
-        vector<shared_ptr<Expr>> arguments
-    )
+    vector<Expr*> arguments;
+    Call(Expr* callee, Token paren, vector<Expr*> arguments)
         : callee(callee),
           paren(paren),
           arguments(arguments) {}
-
     string accept(StringVisitor* visitor) override {
         return visitor->visitCallExpr(this);
     }

@@ -4,16 +4,9 @@
 
 using namespace std;
 
-
-// ============================================================
 // RETURN EXCEPTION
-// ============================================================
-
 class ReturnException {
 public:
-
     Value value;
-
-    ReturnException(Value value)
-        : value(value) {}
+    ReturnException(Value value) : value(value) {}
 };

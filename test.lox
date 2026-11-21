@@ -8,6 +8,8 @@ fun square(x) {
 print square(5);
 print square(10);
 print add(10, 20);
+print "hello
+world";
 
 fun counter() {
     var i = 0;

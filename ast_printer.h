@@ -7,262 +7,104 @@
 
 using namespace std;
 
-
-// ============================================================
 // AST PRINTER
-// ============================================================
-
 class AstPrinter : public StringVisitor {
-
 public:
-
-    string print(
-        shared_ptr<Expr> expr
-    ) {
-
-        return expr->accept(
-            static_cast<StringVisitor*>(this)
-        );
+    string print(Expr* expr) {
+        return expr->accept(this);
     }
 
-
-    // ========================================================
     // BINARY
-    // ========================================================
-
-    string visitBinaryExpr(
-        Binary* expr
-    ) override {
-
-        return parenthesize(
-            expr->op.lexeme,
-            expr->left,
-            expr->right
-        );
+    string visitBinaryExpr(Binary* expr) override {
+        return parenthesize(expr->op.lexeme, expr->left, expr->right);
     }
 
-
-    // ========================================================
     // GROUPING
-    // ========================================================
-
-    string visitGroupingExpr(
-        Grouping* expr
-    ) override {
-
-        return parenthesize(
-            "group",
-            expr->expression
-        );
+    string visitGroupingExpr(Grouping* expr) override {
+        return parenthesize("group", expr->expression);
     }
 
-
-    // ========================================================
     // LITERAL
-    // ========================================================
-
-    string visitLiteralExpr(
-        Literal* expr
-    ) override {
-
+    string visitLiteralExpr(Literal* expr) override {
         if (expr->value.isNil()) {
-
             return "nil";
         }
-
-
         if (expr->value.isBool()) {
-
-            return
-                expr->value.boolean
-                ? "true"
-                : "false";
+            return expr->value.boolean ? "true" : "false";
         }
-
-
         if (expr->value.isNumber()) {
-
-            double d =
-                expr->value.number;
-
-
-            if (
-                d ==
-                static_cast<long long>(d)
-            ) {
-
-                return to_string(
-                    static_cast<long long>(d)
-                );
+            double d = expr->value.number;
+            if (d == static_cast<long long>(d)) {
+                return to_string(static_cast<long long>(d));
             }
-
-
             ostringstream oss;
-
             oss << d;
-
             return oss.str();
         }
-
-
         if (expr->value.isString()) {
-
             return expr->value.str;
         }
-
-
         if (expr->value.isCallable()) {
-
             return expr->value.callable->toString();
         }
-
-
         return "nil";
     }
 
-
-    // ========================================================
     // UNARY
-    // ========================================================
-
-    string visitUnaryExpr(
-        Unary* expr
-    ) override {
-
-        return parenthesize(
-            expr->op.lexeme,
-            expr->right
-        );
+    string visitUnaryExpr(Unary* expr) override {
+        return parenthesize(expr->op.lexeme, expr->right);
     }
 
-
-    // ========================================================
     // VARIABLE
-    // ========================================================
-
-    string visitVariableExpr(
-        Variable* expr
-    ) override {
-
+    string visitVariableExpr(Variable* expr) override {
         return expr->name.lexeme;
     }
 
-
-    // ========================================================
     // ASSIGN
-    // ========================================================
-
-    string visitAssignExpr(
-        Assign* expr
-    ) override {
-
-        return
-            "(= " +
+    string visitAssignExpr(Assign* expr) override {
+        return "(= " +
             expr->name.lexeme +
             " " +
-            expr->value->accept(
-                static_cast<StringVisitor*>(this)
-            ) +
+            expr->value->accept(this) +
             ")";
     }
 
-
-    // ========================================================
     // LOGICAL
-    // ========================================================
-
-    string visitLogicalExpr(
-        Logical* expr
-    ) override {
-
-        return parenthesize(
-            expr->op.lexeme,
-            expr->left,
-            expr->right
-        );
+    string visitLogicalExpr(Logical* expr) override {
+        return parenthesize(expr->op.lexeme, expr->left, expr->right);
     }
 
-
-    // ========================================================
     // CALL
-    // ========================================================
-
-    string visitCallExpr(
-        Call* expr
-    ) override {
-
+    string visitCallExpr(Call* expr) override {
         string result = "(call ";
-
         result +=
-            expr->callee->accept(
-                static_cast<StringVisitor*>(this)
-            );
-
-
-        for (
-            auto& argument :
-            expr->arguments
-        ) {
-
+            expr->callee->accept(this);
+        for (Expr* argument : expr->arguments) {
             result += " ";
-
             result +=
-                argument->accept(
-                    static_cast<StringVisitor*>(this)
-                );
+                argument->accept(this);
         }
-
-
         result += ")";
-
-
         return result;
     }
-
-
 private:
-
-    // ========================================================
     // ONE CHILD
-    // ========================================================
-
-    string parenthesize(
-        const string& name,
-        shared_ptr<Expr> expr
-    ) {
-
-        return
-            "(" +
+    string parenthesize(const string& name, Expr* expr) {
+        return "(" +
             name +
             " " +
-            expr->accept(
-                static_cast<StringVisitor*>(this)
-            ) +
+            expr->accept(this) +
             ")";
     }
 
-
-    // ========================================================
     // TWO CHILDREN
-    // ========================================================
-
-    string parenthesize(
-        const string& name,
-        shared_ptr<Expr> left,
-        shared_ptr<Expr> right
-    ) {
-
-        return
-            "(" +
+    string parenthesize(const string& name, Expr* left, Expr* right) {
+        return "(" +
             name +
             " " +
-            left->accept(
-                static_cast<StringVisitor*>(this)
-            ) +
+            left->accept(this) +
             " " +
-            right->accept(
-                static_cast<StringVisitor*>(this)
-            ) +
+            right->accept(this) +
             ")";
     }
 };

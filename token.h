@@ -20,7 +20,6 @@ enum TokenType {
     // Keywords
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
     PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
-
     END_OF_FILE
     // Special token added when source code finishes.
     // Helps parser know input is over.
@@ -33,10 +32,8 @@ enum TokenType {
 struct LiteralVal {
     enum class Kind { NONE, NUMBER, STRING } kind;
     string raw;  // raw text; Parser converts NUMBER to double via stod()
-
     LiteralVal()                     : kind(Kind::NONE)   {}
-    LiteralVal(const string& s, bool isNum)
-        : kind(isNum ? Kind::NUMBER : Kind::STRING), raw(s) {}
+    LiteralVal(const string& s, bool isNum) : kind(isNum ? Kind::NUMBER : Kind::STRING), raw(s) {}
 };
 
 //represents one complete token
